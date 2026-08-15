@@ -3,22 +3,7 @@ import matplotlib.pyplot as plt
 import matplotlib.tri as tri
 from matplotlib.lines import Line2D
 from compute_ifs import compute_ifs1, compute_ifs2, compute_utility
-
-def peak_to_cartesian(p):
-    """Transforms a 3D simplex coordinate into 2D Cartesian coordinates."""
-    p = np.array(p)
-    x = p[1] + 0.5 * p[2]
-    y = p[2] * np.sqrt(3) / 2.0
-    return x, y
-
-def generate_simplex_grid(resolution=100):
-    """Generates a dense grid of valid outcome distributions q over the 3-simplex."""
-    grid = []
-    for i in range(resolution + 1):
-        for j in range(resolution + 1 - i):
-            k = resolution - i - j
-            grid.append([i / resolution, j / resolution, k / resolution])
-    return np.array(grid)
+from grid import peak_to_cartesian, generate_simplex_grid
 
 def plot_ifs_region(p, n, t, mode='IFS1', resolution=120):
     """
@@ -220,8 +205,8 @@ def plot_ifs2_boundary(p, n, t): return plot_ifs_boundary(p, n, t, mode='IFS2')
 # --- Main Demonstration Program ---
 if __name__ == "__main__":
     # Define an asymmetric test peak, 3 agents, and an ell_1 utility function
-    test_peak = [0.2, 0.3, 0.5]
-    n_agents = 3
+    test_peak = [.5, .5,]
+    n_agents = 2
     t_parameter = 1  # l_1 metric (linear cost)
     
     print(f"Plotting satisfying outcome regions for peak={test_peak}...")

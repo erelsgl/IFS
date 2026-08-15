@@ -1,0 +1,99 @@
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.animation import FuncAnimation
+from matplotlib.lines import Line2D
+
+# Import the unconstrained R^2 functions from our pure R^2 script
+from compute_ifs_r2 import compute_ifs1_r2, compute_ifs2_r2, compute_utility_r2
+
+def animate_ifs_boundary_pure_r2(p, n, mode, t_values, filename="ifs_r2_animation.gif", resolution=200, fps=5):
+    """
+    Creates an animated GIF showing how the boundary of the satisfying region 
+    changes dynamically as the utility parameter t varies in a pure, unconstrained R^2 plane.
+    """
+    p = np.array(p, dtype=float)
+    
+    # Generate an unconstrained bounding box grid around the peak
+    margin = 1.5
+    x_min, x_max = p[0] - margin, p[0] + margin
+    y_min, y_max = p[1] - margin, p[1] + margin
+    
+    q1_vals = np.linspace(x_min, x_max, resolution)
+    q2_vals = np.linspace(y_min, y_max, resolution)
+    Q1, Q2 = np.meshgrid(q1_vals, q2_vals)
+    
+    fig, ax = plt.subplots(figsize=(7, 6))
+
+    def update(frame_idx):
+        t = t_values[frame_idx]
+        
+        # 1. Clear the axes cleanly for each frame update
+        ax.clear()
+        
+        # 2. Draw static background components in R^2
+        ax.scatter([p[0]], [p[1]], color='blue', s=120, zorder=5)
+        
+        # 3. Compute threshold and utilities for the current frame parameter t
+        if mode == 'IFS1':
+            threshold_val = compute_ifs1_r2(p, t, n)
+        elif mode == 'IFS2':
+            threshold_val = compute_ifs2_r2(p, t, n)
+        else:
+            raise ValueError("mode must be 'IFS1' or 'IFS2'")
+            
+        utilities = np.zeros(Q1.shape)
+        for i in range(resolution):
+            for j in range(resolution):
+                q_vector = np.array([Q1[i, j], Q2[i, j]])
+                utilities[i, j] = compute_utility_r2(p, q_vector, t)
+                
+        # 4. Draw the unconstrained R^2 boundary line
+        ax.contour(Q1, Q2, utilities, levels=[threshold_val], 
+                   colors=['red'], linestyles='--', linewidths=2.5, zorder=4)
+        
+        # 5. Restore styling parameters on the newly cleared frame
+        ax.set_xlim(x_min, x_max)
+        ax.set_ylim(y_min, y_max)
+        ax.set_xlabel('$q_1$', fontsize=12)
+        ax.set_ylabel('$q_2$', fontsize=12)
+        ax.grid(True, linestyle=':', alpha=0.6)
+        
+        ax.set_title(f"Dynamic {mode} $\mathbb{{R}}^2$ Boundary Evolution\nPeak={list(p)}, n={n} | Current t = {t:.2f}", 
+                     fontsize=11, fontweight='bold')
+        
+        boundary_line = Line2D([0], [0], color='red', linestyle='--', lw=2, 
+                               label=f'{mode} Bound (u(q) = {threshold_val:.3f})')
+        peak_marker = Line2D([0], [0], marker='o', color='blue', linestyle='None', 
+                             markersize=8, label=f'Peak $p$ ({p[0]}, {p[1]})')
+        ax.legend(handles=[peak_marker, boundary_line], loc='upper right')
+        
+        return ax.collections
+
+    # Create the animation framework
+    anim = FuncAnimation(fig, update, frames=len(t_values), interval=1000 // fps, blit=False)
+    
+    # Save the resulting frame sequence to a GIF file using Pillow
+    print(f"Compiling unconstrained R^2 frames into {filename}... Please wait.")
+    anim.save(filename, writer='pillow', fps=fps)
+    print(f"Successfully saved unconstrained animation to {filename}")
+    plt.close(fig)
+
+# --- Main Demonstration Program ---
+if __name__ == "__main__":
+    # Test using a peak unconstrained by a budget condition
+    test_r2_peak = [0.7, -0.4]
+    n_agents = 3
+    
+    # Fine resolution sequence capturing the behavior as t increases
+    t_sequence = np.concatenate([
+        np.linspace(1.0, 3.0, num=20),       # Fast transition steps
+        np.linspace(3.0, 22.0, num=20)        # Slow expansion/flattening steps
+    ])
+    
+    # # 1. Generate Pure R^2 IFS1 Animation
+    # animate_ifs_boundary_pure_r2(p=test_r2_peak, n=n_agents, mode='IFS1', t_values=t_sequence,
+    #                              filename="plots/pure_r2_ifs1_evolution.gif", fps=4)
+                                 
+    # 2. Generate Pure R^2 IFS2 Animation                             
+    animate_ifs_boundary_pure_r2(p=test_r2_peak, n=n_agents, mode='IFS2', t_values=t_sequence,
+                                 filename="plots/pure_r2_ifs2_evolution.gif", fps=4)

@@ -2,32 +2,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.tri as tri
 from compute_ifs import compute_ifs1, compute_ifs2
+from grid import peak_to_cartesian, generate_simplex_grid
 
-def peak_to_cartesian(p):
-    """
-    Transforms a 3D simplex coordinate (p1, p2, p3) where sum(p) = 1
-    into 2D Cartesian coordinates (x, y) for an equilateral triangle.
-    The vertices of the triangle are:
-    A (Alternative 1): (0, 0)
-    B (Alternative 2): (1, 0)
-    C (Alternative 3): (0.5, sqrt(3)/2)
-    """
-    p = np.array(p)
-    x = p[1] + 0.5 * p[2]
-    y = p[2] * np.sqrt(3) / 2.0
-    return x, y
-
-def generate_simplex_grid(resolution=50):
-    """Generates valid probability distributions over a 3-simplex."""
-    peaks = []
-    for i in range(resolution + 1):
-        for j in range(resolution + 1 - i):
-            k = resolution - i - j
-            p1 = i / resolution
-            p2 = j / resolution
-            p3 = k / resolution
-            peaks.append([p1, p2, p3])
-    return np.array(peaks)
 
 def plot_ifs_contour(t, n, mode='IFS1', resolution=60):
     """
